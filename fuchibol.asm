@@ -22,6 +22,8 @@ include cursor.asm
     idolosh_team db "Burrai,Vargas,Rodriguez,Sosa,Chala,Souza,Trindade,Corozo,Solano,Kitu,Polaco,$"
     coquetash_team db "Ortiz,Caicedo,Leguizamon,Leon,Cortez,Cortez,Erbes,Garces,Meli,Carabali,Ruiz,Castelli,$"
     kickers dw 5 dup(0)
+    init_green db 0ah
+
 
     team db ?
     x dw ?
@@ -32,6 +34,7 @@ include cursor.asm
     b db ?
     d db ?
     e db ?
+    f db ?
     
 
 .code
@@ -133,7 +136,6 @@ main proc
     call team_players
     delay 20
 
-
     call erase
     mov a,11
     mov b,9
@@ -144,18 +146,76 @@ main proc
     
     call press_key_follow
     call erase
-
-
+;---------------------------------------------------------------------------------------------------------------------
+    mov ax, 0600h   
+    MOV bh, 02h  
+    mov ch, [init_green]
+    mov cl, 0
+    mov dh, 24  
+    mov dl, 39; DH=fila, DL=columna
+    INT 10H        
+    
     call arco
-    mov j,68
     mov i,165
+    push i
+    mov j,66
     player i,j,01h,1
-    mov j,120
+    mov j,140
     circle i,j,6,0fh
     
+    movement:
+    mov f,0
+    movement_x:
+    delay 1
+    mov ah,01h
+    int 16h
+    jnz fin
+    call delete_goalKeeper
+    pop i
+    inc i
+    inc f
+    push i
+    mov j,66
+    player i,j,01h,1
+    cmp f,40
+    jnz movement_x
+    mov f,0
+    movement_y:
+    delay 1
+    mov ah,01h
+    int 16h
+    jnz fin
+    call delete_goalKeeper
+    pop i
+    dec i
+    inc f
+    push i
+    mov j,66
+    player i,j,01h,1
+    cmp f,80
+    jnz movement_y
+    mov f,0
+    movement_return:
+    delay 1
+    mov ah,01h
+    int 16h
+    jnz fin
+    call delete_goalKeeper
+    pop i
+    inc i
+    inc f
+    push i
+    mov j,66
+    player i,j,01h,1
+    cmp f,40
+    jnz movement_return
+    jmp movement
+
     
     
-    ;FIN------------------------------------------------------------------------------------------------------------
+    
+    
+;FIN------------------------------------------------------------------------------------------------------------------
     jmp fin
 
 
@@ -273,14 +333,35 @@ team_players endp
 ;ARCO----------------------------------------------------------------------------------------------------------
 arco proc far    
     mov i,110
-    mov j,50  
+    mov j,47  
     line_hor 110,i,j,0fh
     line_vert 40,i,j,0fh
     mov i,110
-    mov j,50
+    mov j,47
     line_vert 40,i,j,0fh
     ret
 arco endp
 ;---------------------------------------------------------------------------------------------------------------
+
+delete_goalKeeper proc far
+    mov ax, 0600h   
+    mov bh, 0h  
+    mov ch, [init_green]
+    sub ch, 3
+    mov cl, 0
+    mov dh, [init_green]  
+    mov dl, 39; DH=fila, DL=columna
+    int 10h 
+    mov j,140  
+    mov bh, 02h  
+    mov ch, [init_green]
+    mov cl, 0
+    mov dh, [init_green]
+    add dh,1  
+    mov dl, 39; DH=fila, DL=columna
+    int 10h 
+    call arco
+    ret
+delete_goalKeeper endp
 
 end main

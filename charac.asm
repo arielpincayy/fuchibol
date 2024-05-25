@@ -3,6 +3,7 @@ include line.asm
 include circle.asm
 
 player macro i,j,color,front
+    local no_eye
     circle i,j,7h,0eh
     mov bx,front
     cmp bx,1

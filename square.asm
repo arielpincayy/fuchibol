@@ -9,7 +9,6 @@ endm
 
 square macro i,j,h,color
     local height,width  
-    push ax
     mov a,0 
     mov b,0
     width: 
@@ -26,6 +25,5 @@ square macro i,j,h,color
     inc a
     cmp a,h
     jnz width 
-    pop ax
 endm
 

@@ -4,7 +4,6 @@ include line.asm
 
 circle macro i,j,radio,color
     local w
-    push bx
     mov bx,0h
     mov e,0h
     mov bh,radio
