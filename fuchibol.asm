@@ -21,8 +21,16 @@ include cursor.asm
     
     idolosh_team db "Burrai,Vargas,Rodriguez,Sosa,Chala,Souza,Trindade,Corozo,Solano,Kitu,Polaco,$"
     coquetash_team db "Ortiz,Caicedo,Leguizamon,Leon,Cortez,Cortez,Erbes,Garces,Meli,Carabali,Ruiz,Castelli,$"
+    inst_center db "W: Centro$"
+    inst_right db "D: Derecha$"
+    inst_left db "A: Izquierda$"
     kickers dw 5 dup(0)
     init_green db 0ah
+    num_pentaltys db 5
+    my_score db 0
+    computer_score db 0
+    pos db 165
+    
 
 
     team db ?
@@ -34,7 +42,7 @@ include cursor.asm
     b db ?
     d db ?
     e db ?
-    f db ?
+    f dw ?
     
 
 .code
@@ -70,7 +78,7 @@ main proc
     inc d
     cmp d,23
     jnz writting
-    delay 10
+    delay 2
     call erase
     
     
@@ -135,6 +143,25 @@ main proc
     call erase
     call team_players
     delay 20
+    
+    call erase
+    mov a,5
+    mov b,15
+    pos_cursor a,b
+    lea dx, inst_center
+    mov ah, 09h       
+    int 21h
+    add a,4
+    pos_cursor a,b
+    lea dx, inst_right
+    mov ah, 09h       
+    int 21h
+    add a,4
+    pos_cursor a,b
+    lea dx, inst_left
+    mov ah, 09h       
+    int 21h
+    delay 40
 
     call erase
     mov a,11
@@ -152,64 +179,76 @@ main proc
     mov ch, [init_green]
     mov cl, 0
     mov dh, 24  
-    mov dl, 39; DH=fila, DL=columna
-    INT 10H        
+    mov dl, 39
+    INT 10H  
     
+    
+
     call arco
     mov i,165
     push i
     mov j,66
     player i,j,01h,1
-    mov j,140
+    mov j,170
     circle i,j,6,0fh
+    add j,10
+    player i,j,0eh,0
     
     movement:
     mov f,0
     movement_x:
     delay 1
+    mov bx,i
+    mov pos,bl
     mov ah,01h
     int 16h
     jnz fin
     call delete_goalKeeper
     pop i
-    inc i
+    add i,30
     inc f
     push i
     mov j,66
     player i,j,01h,1
-    cmp f,40
+    cmp f,1
     jnz movement_x
     mov f,0
     movement_y:
+    mov bx,i
+    mov pos,bl
     delay 1
     mov ah,01h
     int 16h
     jnz fin
     call delete_goalKeeper
     pop i
-    dec i
+    sub i,30
     inc f
     push i
     mov j,66
     player i,j,01h,1
-    cmp f,80
+    cmp f,2
     jnz movement_y
     mov f,0
     movement_return:
+    mov bx,i
+    mov pos,bl
     delay 1
     mov ah,01h
     int 16h
     jnz fin
     call delete_goalKeeper
     pop i
-    inc i
+    add i,30
     inc f
     push i
     mov j,66
     player i,j,01h,1
-    cmp f,40
+    cmp f,1
     jnz movement_return
     jmp movement
+    call your_goal
+
 
     
     
@@ -306,7 +345,7 @@ team_players proc far
     cmp x,5h
     jz end_team_players
     select_end:
-    delay 10
+    delay 5
     call erase
     delay 3h
 
@@ -322,7 +361,7 @@ team_players proc far
     lea dx, missing_kickers
     mov ah, 09h       
     int 21h
-    delay 20
+    delay 10
     call erase
     jmp init_team_choose
     end_team_players:
@@ -339,10 +378,19 @@ arco proc far
     mov i,110
     mov j,47
     line_vert 40,i,j,0fh
+    mov i,0
+    line_hor 200,i,j,0fh
+    line_hor 120,i,j,0fh
+    mov i,40
+    line_vert 112,i,j,0fh
+    mov i,290
+    sub j,112
+    line_vert 112,i,j,0fh
     ret
 arco endp
 ;---------------------------------------------------------------------------------------------------------------
 
+;delete_goalKeeper----------------------------------------------------------------------------------------------
 delete_goalKeeper proc far
     mov ax, 0600h   
     mov bh, 0h  
@@ -350,7 +398,7 @@ delete_goalKeeper proc far
     sub ch, 3
     mov cl, 0
     mov dh, [init_green]  
-    mov dl, 39; DH=fila, DL=columna
+    mov dl, 39
     int 10h 
     mov j,140  
     mov bh, 02h  
@@ -363,5 +411,17 @@ delete_goalKeeper proc far
     call arco
     ret
 delete_goalKeeper endp
+;---------------------------------------------------------------------------------------------------------------
+
+your_goal proc far
+    cmp al,pos
+    jz goal
+    ret
+    goal:
+    inc my_score
+    ret
+your_goal endp
+
+
 
 end main

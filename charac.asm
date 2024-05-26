@@ -14,10 +14,10 @@ player macro i,j,color,front
     mov y,bx
     add y,5
     sub x,3
-    no_eye:
     graph_pixel x,y,0h
     sub x,3
     graph_pixel x,y,0h
+    no_eye:
     add j,9
     sub i,3
     line_vert 8,i,j,color
@@ -41,9 +41,9 @@ player macro i,j,color,front
     line_hor 4,x,y,color
     add x,2
     add y,6
-    line_vert 6,x,y,0fh
+    line_vert 6,x,y,0h
     add x,3
     sub y,6
-    line_vert 6,x,y,0fh
+    line_vert 6,x,y,0h
 endm
 
