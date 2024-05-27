@@ -24,12 +24,18 @@ include cursor.asm
     inst_center db "W: Centro$"
     inst_right db "D: Derecha$"
     inst_left db "A: Izquierda$"
+    goal_msg db "GOOOOL$"
+    fail_msg db "NOOOOOO$"
+    bsc_name db "BSC$"
+    cse_name db "CSE$"
     kickers dw 5 dup(0)
+    buffer db 2 dup("$")
     init_green db 0ah
     num_pentaltys db 5
     my_score db 0
     computer_score db 0
     pos db 165
+    pos_ball db 165
     
 
 
@@ -67,7 +73,7 @@ main proc
     mov cx,1h
     mov al,[di]
     int 10h
-    delay 3h
+    delay 2
     inc b
     inc di
     inc x
@@ -118,7 +124,7 @@ main proc
     sub al,30h
     mov team,al
 
-    delay 10
+    delay 5
     call erase
     
     
@@ -142,7 +148,7 @@ main proc
     
     call erase
     call team_players
-    delay 20
+    delay 10
     
     call erase
     mov a,5
@@ -191,63 +197,50 @@ main proc
     player i,j,01h,1
     mov j,170
     circle i,j,6,0fh
+    sub i,10
     add j,10
     player i,j,0eh,0
     
+    call score_board
+
     movement:
-    mov f,0
-    movement_x:
-    delay 1
-    mov bx,i
-    mov pos,bl
-    mov ah,01h
-    int 16h
-    jnz fin
-    call delete_goalKeeper
-    pop i
-    add i,30
-    inc f
-    push i
-    mov j,66
-    player i,j,01h,1
-    cmp f,1
-    jnz movement_x
-    mov f,0
-    movement_y:
-    mov bx,i
-    mov pos,bl
     delay 1
     mov ah,01h
     int 16h
     jnz fin
     call delete_goalKeeper
-    pop i
-    sub i,30
-    inc f
-    push i
+    mov i,165
     mov j,66
+    mov pos,165
     player i,j,01h,1
-    cmp f,2
-    jnz movement_y
-    mov f,0
-    movement_return:
-    mov bx,i
-    mov pos,bl
-    delay 1
+    delay 3
     mov ah,01h
     int 16h
     jnz fin
     call delete_goalKeeper
-    pop i
-    add i,30
-    inc f
-    push i
+    mov i,195
     mov j,66
+    mov pos,195
     player i,j,01h,1
-    cmp f,1
-    jnz movement_return
+    delay 3
+    mov ah,01h
+    int 16h
+    jnz fin
+    call delete_goalKeeper
+    mov i,165
+    mov j,66
+    mov pos,165
+    player i,j,01h,1
+    delay 3
+    mov ah,01h
+    int 16h
+    jnz fin
+    call delete_goalKeeper
+    mov i,135
+    mov j,66
+    mov pos,135
+    player i,j,01h,1
     jmp movement
-    call your_goal
 
 
     
@@ -258,11 +251,13 @@ main proc
     jmp fin
 
 
-fin: 
-mov ah,07h
-int 21h
-mov ah,4ch
-int 21h       
+    fin: 
+    
+    call your_goal
+    mov ah,07h
+    int 21h
+    mov ah,4ch
+    int 21h       
 main endp 
 
 ;erase--------------------------------------------------------------------------------------------------------
@@ -345,7 +340,7 @@ team_players proc far
     cmp x,5h
     jz end_team_players
     select_end:
-    delay 5
+    delay 3
     call erase
     delay 3h
 
@@ -413,15 +408,102 @@ delete_goalKeeper proc far
 delete_goalKeeper endp
 ;---------------------------------------------------------------------------------------------------------------
 
-your_goal proc far
+your_goal proc 
+    mov pos_ball,al
+    mov ax, 0600h   
+    mov bh, 0h  
+    mov ch, 18
+    mov cl, 16
+    mov dh, 24
+    mov dl, 20
+    int 10h  
+    mov bh, 02h   
+    int 10h
+    mov i,160
+    mov j,170
+    square i,j,3,0fh
+    sub i,5
+    player i,j,0eh,0
+    mov j,64
+    cmp pos_ball,115
+    jnz no_center
+    mov i,165
+    jmp new_pos_ball
+    no_center:
+    cmp pos_ball,100
+    jnz no_right
+    mov i,195
+    jmp new_pos_ball
+    no_right:
+    mov i,135
+    
+    new_pos_ball:
+    mov ax,i
+    mov pos_ball,al
+    add j,10
+    circle i,j,6,0fh
+    mov al, pos_ball
     cmp al,pos
-    jz goal
-    ret
-    goal:
+    jnz goal
+    mov a,1
+    mov b,15
+    pos_cursor a,b
+    lea dx, [fail_msg]   
+    mov ah, 09h    
+    int 21h 
     inc my_score
+    jmp fin_goal
+    goal:
+    mov a,1
+    mov b,177
+    pos_cursor a,b
+    lea dx, goal_msg    
+    mov ah, 09h    
+    int 21h 
+    inc my_score
+    fin_goal:
+    delay 20
     ret
 your_goal endp
 
+
+;---------------------------------------------------------------------------------------------------------------------
+
+score_board proc 
+    mov a,1
+    mov b,0
+    pos_cursor a,b
+    lea dx, [bsc_name]    
+    mov ah, 09h    
+    int 21h 
+
+    add b,4
+    pos_cursor a,b
+    mov al,[my_score]
+    add al,'0'
+    mov [buffer],al 
+    mov ah, 09h
+    mov dx, offset buffer
+    int 21h
+    
+    add b,2
+    pos_cursor a,b
+    lea dx, [cse_name]    
+    mov ah, 09h    
+    int 21h
+
+    add b,4
+    pos_cursor a,b
+    mov al,[computer_score]
+    add al,'0'
+    mov [buffer],al 
+    mov ah, 09h
+    mov dx, offset buffer
+    int 21h
+
+
+    ret
+score_board endp
 
 
 end main
