@@ -2,8 +2,15 @@ include square.asm
 include line.asm
 include circle.asm
 
-player macro i,j,color,front
-    local no_eye
+player macro i,j,t,front
+    local no_eye,draw
+    push bx
+    cmp t,1
+    mov bh, 0eh
+    jz draw
+    mov bh, 01h
+    draw:
+    mov color,bh
     circle i,j,7h,0eh
     mov bx,front
     cmp bx,1
@@ -45,5 +52,6 @@ player macro i,j,color,front
     add x,3
     sub y,6
     line_vert 6,x,y,0h
+    pop bx
 endm
 

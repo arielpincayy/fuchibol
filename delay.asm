@@ -1,5 +1,7 @@
 delay macro t
-   local loop, delay_loop
+    local loop, delay_loop
+    push cx
+    push dx
     mov dx,t
     loop:
     mov cx, 0ffffh  
@@ -10,5 +12,7 @@ delay macro t
     dec dx
     cmp dx,0h
     jnz loop
+    pop dx
+    pop cx
 
 endm

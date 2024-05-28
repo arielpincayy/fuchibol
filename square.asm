@@ -1,10 +1,16 @@
 graph_pixel macro i,j,color 
+    push ax
+    push cx
+    push dx
     mov ah,00h
     mov ah,0ch
     mov al,color
     mov cx,i
     mov dx,j
-    int 10h    
+    int 10h  
+    pop dx 
+    pop cx
+    pop ax 
 endm 
 
 square macro i,j,h,color

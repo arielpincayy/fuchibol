@@ -26,8 +26,8 @@ include cursor.asm
     inst_left db "A: Izquierda$"
     goal_msg db "GOOOOL$"
     fail_msg db "NOOOOOO$"
-    bsc_name db "BSC$"
-    cse_name db "CSE$"
+    bsc_name db "IDO$"
+    cse_name db "COQ$"
     kickers dw 5 dup(0)
     buffer db 2 dup("$")
     init_green db 0ah
@@ -40,6 +40,8 @@ include cursor.asm
 
 
     team db ?
+    computer_team db ?
+    color db ?
     x dw ?
     y dw ?
     i dw ?
@@ -60,6 +62,7 @@ main proc
     
     mov ax,013h 
     int 10h
+    delay 10
     
     mov a,11
     mov b,8
@@ -116,11 +119,14 @@ main proc
     mov ah,1
     int 21h
     cmp al,31h
+    mov computer_team,2
     jz choosen
     cmp al,32h
+    mov computer_team,1
     jz choosen
     jmp choose
     choosen:
+    call input_sound
     sub al,30h
     mov team,al
 
@@ -194,12 +200,12 @@ main proc
     mov i,165
     push i
     mov j,66
-    player i,j,01h,1
+    player i,j,computer_team,1
     mov j,170
     circle i,j,6,0fh
     sub i,10
     add j,10
-    player i,j,0eh,0
+    player i,j,team,0
     
     call score_board
 
@@ -212,7 +218,7 @@ main proc
     mov i,165
     mov j,66
     mov pos,165
-    player i,j,01h,1
+    player i,j,computer_team,1
     delay 3
     mov ah,01h
     int 16h
@@ -221,7 +227,7 @@ main proc
     mov i,195
     mov j,66
     mov pos,195
-    player i,j,01h,1
+    player i,j,computer_team,1
     delay 3
     mov ah,01h
     int 16h
@@ -230,7 +236,7 @@ main proc
     mov i,165
     mov j,66
     mov pos,165
-    player i,j,01h,1
+    player i,j,computer_team,1
     delay 3
     mov ah,01h
     int 16h
@@ -239,7 +245,7 @@ main proc
     mov i,135
     mov j,66
     mov pos,135
-    player i,j,01h,1
+    player i,j,computer_team,1
     jmp movement
 
 
@@ -252,8 +258,8 @@ main proc
 
 
     fin: 
-    
     call your_goal
+    call score_board
     mov ah,07h
     int 21h
     mov ah,4ch
@@ -274,6 +280,7 @@ erase endp
 press_key_follow proc far
     mov ah,07h
     int 21h
+    call input_sound 
     ret
 press_key_follow endp
 ;--------------------------------------------------------------------------------------------------------------
@@ -290,8 +297,7 @@ team_players proc far
     mov a,4h
     mov b,8
     pos_cursor a,b
-    lea dx, choose_your_kickers_inst
-    mov ah, 09h       
+    lea dx, choose_your_kickers_inst  
     int 21h 
     mov d,0h
     mov x,0h
@@ -304,8 +310,9 @@ team_players proc far
     coq:
     mov j,09h
     lea di,coquetash_team
-    choose_players:
     
+
+    choose_players: 
     mov a,11
     mov b,16
     write_player:
@@ -336,6 +343,7 @@ team_players proc far
     mov si,x
     mov kickers[si],ax
     mov si,ax
+    call input_sound
     inc x
     cmp x,5h
     jz end_team_players
@@ -423,7 +431,7 @@ your_goal proc
     mov j,170
     square i,j,3,0fh
     sub i,5
-    player i,j,0eh,0
+    player i,j,team,0
     mov j,64
     cmp pos_ball,115
     jnz no_center
@@ -445,16 +453,15 @@ your_goal proc
     mov al, pos_ball
     cmp al,pos
     jnz goal
-    mov a,1
+    mov a,2
     mov b,15
     pos_cursor a,b
     lea dx, [fail_msg]   
     mov ah, 09h    
-    int 21h 
-    inc my_score
+    int 21h
     jmp fin_goal
     goal:
-    mov a,1
+    mov a,2
     mov b,177
     pos_cursor a,b
     lea dx, goal_msg    
@@ -469,7 +476,16 @@ your_goal endp
 
 ;---------------------------------------------------------------------------------------------------------------------
 
-score_board proc 
+score_board proc
+    mov ax, 0600h   
+    mov bh, 0h  
+    mov ch, 1
+    mov cl, 0
+    mov dh, 1
+    mov dl, 39
+    int 10h 
+
+
     mov a,1
     mov b,0
     pos_cursor a,b
@@ -482,14 +498,12 @@ score_board proc
     mov al,[my_score]
     add al,'0'
     mov [buffer],al 
-    mov ah, 09h
     mov dx, offset buffer
     int 21h
     
     add b,2
     pos_cursor a,b
-    lea dx, [cse_name]    
-    mov ah, 09h    
+    lea dx, [cse_name]  
     int 21h
 
     add b,4
@@ -497,13 +511,45 @@ score_board proc
     mov al,[computer_score]
     add al,'0'
     mov [buffer],al 
-    mov ah, 09h
     mov dx, offset buffer
     int 21h
 
 
     ret
 score_board endp
+
+input_sound proc far
+    push ax
+    push bx
+	mov al, 3       
+	mov bx, 4000h   
+	mov CX, 1 
+	
+    input_loop_sound:
+	out 43h, al     
+	mov ax, bx
+	out 42h, al     
+	mov al, ah
+	out 42h, al     
+	
+	mov ax, 40h
+	mov al, 3       
+	out 61h, al
+	
+	mov ax, 86DDh   
+	INT 15h
+	
+	mov ax, 40h
+	mov al, 0       
+	out 61h, al
+	
+    dec cx
+	jnz input_loop_sound   
+	
+	pop bx          
+	pop ax
+	ret
+input_sound endp
 
 
 end main
