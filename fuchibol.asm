@@ -21,7 +21,7 @@ include cursor.asm
     
     idolosh_team db "Burrai,Vargas,Rodriguez,Sosa,Chala,Souza,Trindade,Corozo,Solano,Kitu,Polaco,$"
     coquetash_team db "Ortiz,Caicedo,Leguizamon,Leon,Cortez,Cortez,Erbes,Garces,Meli,Carabali,Ruiz,Castelli,$"
-    inst_center db "W: Centro$"
+    inst_center db "S: Centro$"
     inst_right db "D: Derecha$"
     inst_left db "A: Izquierda$"
     goal_msg db "GOOOOL$"
@@ -184,19 +184,22 @@ main proc
     int 21h
     
     call press_key_follow
-    call erase
 ;---------------------------------------------------------------------------------------------------------------------
+    
+    
+    penalties_match:   
+;your turn----------------------------------------------------------------------------------------------------------  
+    call erase
     mov ax, 0600h   
-    MOV bh, 02h  
+    mov bh, 02h  
     mov ch, [init_green]
     mov cl, 0
     mov dh, 24  
     mov dl, 39
-    INT 10H  
-    
-    
-
+    int 10H  
     call arco
+
+    call score_board
     mov i,165
     push i
     mov j,66
@@ -206,14 +209,11 @@ main proc
     sub i,10
     add j,10
     player i,j,team,0
-    
-    call score_board
 
     movement:
     delay 1
     mov ah,01h
     int 16h
-    jnz fin
     call delete_goalKeeper
     mov i,165
     mov j,66
@@ -222,7 +222,7 @@ main proc
     delay 3
     mov ah,01h
     int 16h
-    jnz fin
+    jnz shooted
     call delete_goalKeeper
     mov i,195
     mov j,66
@@ -231,7 +231,7 @@ main proc
     delay 3
     mov ah,01h
     int 16h
-    jnz fin
+    jnz shooted
     call delete_goalKeeper
     mov i,165
     mov j,66
@@ -240,30 +240,133 @@ main proc
     delay 3
     mov ah,01h
     int 16h
-    jnz fin
+    jnz shooted
     call delete_goalKeeper
     mov i,135
     mov j,66
     mov pos,135
     player i,j,computer_team,1
     jmp movement
+    
+    shooted:
+    mov pos_ball,al
+    mov ax, 0600h   
+    mov bh, 0h  
+    mov ch, 18
+    mov cl, 16
+    mov dh, 24
+    mov dl, 20
+    int 10h  
+    mov bh, 02h   
+    int 10h
+    mov i,160
+    mov j,170
+    square i,j,3,0fh
+    sub i,5
+    player i,j,team,0
+    mov f,0
+    call is_goal
+    call score_board
+    delay 10
+;-----------------------------------------------------------------------------------------------------------------    
+    
+;computer turn----------------------------------------------------------------------------------------------------   
+    call press_key_follow
+    call erase
+    mov ax, 0600h   
+    MOV bh, 02h  
+    mov ch, [init_green]
+    mov cl, 0
+    mov dh, 24  
+    mov dl, 39
+    int 10H  
+    call arco
+
+    call score_board
+    mov i,165
+    push i
+    mov j,66
+    player i,j,team,1
+    mov j,170
+    circle i,j,6,0fh
+    sub i,10
+    add j,10
+    player i,j,computer_team,0
 
 
+    movement2:
+    delay 1
+    mov ah,01h
+    int 16h
+    call delete_goalKeeper
+    mov i,165
+    mov j,66
+    mov pos,165
+    player i,j,team,1
+    delay 3
+    mov ah,01h
+    int 16h
+    jnz shooted2
+    call delete_goalKeeper
+    mov i,195
+    mov j,66
+    mov pos,195
+    player i,j,team,1
+    delay 3
+    mov ah,01h
+    int 16h
+    jnz shooted2
+    call delete_goalKeeper
+    mov i,165
+    mov j,66
+    mov pos,165
+    player i,j,team,1
+    delay 3
+    mov ah,01h
+    int 16h
+    jnz shooted2
+    call delete_goalKeeper
+    mov i,135
+    mov j,66
+    mov pos,135
+    player i,j,team,1
+    jmp movement2
     
+    shooted2:
+    mov pos_ball,al
+    mov ax, 0600h   
+    mov bh, 0h  
+    mov ch, 18
+    mov cl, 16
+    mov dh, 24
+    mov dl, 20
+    int 10h  
+    mov bh, 02h   
+    int 10h
+    mov i,160
+    mov j,170
+    square i,j,3,0fh
+    sub i,5
+    player i,j,computer_team,0
+    mov f,1
+    call is_goal
+    call score_board
+;-----------------------------------------------------------------------------------------------------------------
     
-    
-    
+    call press_key_follow
+    dec [num_pentaltys]
+    cmp [num_pentaltys],0
+    jnz penalties_match
+   
 ;FIN------------------------------------------------------------------------------------------------------------------
-    jmp fin
+
 
 
     fin: 
-    call your_goal
-    call score_board
     mov ah,07h
     int 21h
     mov ah,4ch
-    int 21h       
+    int 21h     
 main endp 
 
 ;erase--------------------------------------------------------------------------------------------------------
@@ -339,10 +442,10 @@ team_players proc far
     jz select_end
     jmp select
     store_player:
-    mov ax,si
-    mov si,x
-    mov kickers[si],ax
-    mov si,ax
+    mov ax,di
+    mov di,x
+    mov kickers[di],ax
+    mov di,ax
     call input_sound
     inc x
     cmp x,5h
@@ -408,7 +511,7 @@ delete_goalKeeper proc far
     mov ch, [init_green]
     mov cl, 0
     mov dh, [init_green]
-    add dh,1  
+    inc dh 
     mov dl, 39; DH=fila, DL=columna
     int 10h 
     call arco
@@ -416,22 +519,8 @@ delete_goalKeeper proc far
 delete_goalKeeper endp
 ;---------------------------------------------------------------------------------------------------------------
 
-your_goal proc 
-    mov pos_ball,al
-    mov ax, 0600h   
-    mov bh, 0h  
-    mov ch, 18
-    mov cl, 16
-    mov dh, 24
-    mov dl, 20
-    int 10h  
-    mov bh, 02h   
-    int 10h
-    mov i,160
-    mov j,170
-    square i,j,3,0fh
-    sub i,5
-    player i,j,team,0
+is_goal proc far
+    push f
     mov j,64
     cmp pos_ball,115
     jnz no_center
@@ -456,10 +545,12 @@ your_goal proc
     mov a,2
     mov b,15
     pos_cursor a,b
-    lea dx, [fail_msg]   
+    lea dx, fail_msg  
     mov ah, 09h    
     int 21h
-    jmp fin_goal
+    pop bx
+    delay 20
+    ret
     goal:
     mov a,2
     mov b,177
@@ -467,16 +558,22 @@ your_goal proc
     lea dx, goal_msg    
     mov ah, 09h    
     int 21h 
-    inc my_score
-    fin_goal:
+    pop bx
+    cmp bx,0
+    jz my_goal
+    inc computer_score
     delay 20
     ret
-your_goal endp
+    my_goal:
+    inc my_score
+    delay 20
+    ret
+is_goal endp
 
 
 ;---------------------------------------------------------------------------------------------------------------------
 
-score_board proc
+score_board proc far
     mov ax, 0600h   
     mov bh, 0h  
     mov ch, 1
@@ -521,9 +618,9 @@ score_board endp
 input_sound proc far
     push ax
     push bx
-	mov al, 3       
+	mov al, 3h       
 	mov bx, 4000h   
-	mov CX, 1 
+	mov cx, 1h 
 	
     input_loop_sound:
 	out 43h, al     
@@ -531,21 +628,16 @@ input_sound proc far
 	out 42h, al     
 	mov al, ah
 	out 42h, al     
-	
 	mov ax, 40h
 	mov al, 3       
 	out 61h, al
-	
 	mov ax, 86DDh   
-	INT 15h
-	
+	int 15h
 	mov ax, 40h
 	mov al, 0       
 	out 61h, al
-	
     dec cx
 	jnz input_loop_sound   
-	
 	pop bx          
 	pop ax
 	ret
