@@ -18,6 +18,12 @@ include cursor.asm
     choose_your_kickers db "Escoge tus pateadores$"
     choose_your_kickers_inst db "S: Escoger   D: Siguiente$"
     missing_kickers db "Faltan pateadores, escoge de nuevo$"
+    winner db "Has ganado :D$"
+    looser db "Ni para patear un penal :C$"
+    idol_winner db "El TIA te lo agradecera por siempre$"
+    idol_looser db "El TIA sufrio las consecucnecias$"
+    coq_winner db "Has conseguido vengar el cincocer$"
+    coq_looser db "Ya nada, hay que saquear el TUTI$"
     
     idolosh_team db "Burrai,Vargas,Rodriguez,Sosa,Chala,Souza,Trindade,Corozo,Solano,Kitu,Polaco,$"
     coquetash_team db "Ortiz,Caicedo,Leguizamon,Leon,Cortez,Cortez,Erbes,Garces,Meli,Carabali,Ruiz,Castelli,$"
@@ -287,7 +293,6 @@ main proc
     add al,[computer_score]
     cmp al,[my_score]
     jl fin
-
     
     mov al,[num_pentaltys]
     dec al
@@ -419,9 +424,69 @@ main proc
    
 ;FIN------------------------------------------------------------------------------------------------------------------
 
-    fin: 
-    mov ah,07h
+    fin:
+    call erase
+    mov bl,[my_score]
+    cmp bl,[computer_score]
+    jl loose_match
+    
+    mov a,8
+    mov b,12
+    pos_cursor a,b
+    lea dx, winner 
+    mov ah, 09h       
     int 21h
+    mov bl,[team]
+    cmp bl,1
+    jz idol_w
+    
+    mov a,12
+    mov b,2
+    pos_cursor a,b
+    lea dx, [coq_winner] 
+    mov ah, 09h       
+    int 21h
+    jmp winner_match
+
+    idol_w:
+    mov a,12
+    mov b,2
+    pos_cursor a,b
+    lea dx, [idol_winner] 
+    mov ah, 09h       
+    int 21h
+    jmp winner_match 
+
+    loose_match:
+    mov a,8
+    mov b,5
+    pos_cursor a,b
+    lea dx, looser 
+    mov ah, 09h       
+    int 21h
+    mov bl,[team]
+    cmp bl,1
+    jz idol_l
+    
+    mov a,12
+    mov b,5
+    pos_cursor a,b
+    lea dx, [coq_looser] 
+    mov ah, 09h       
+    int 21h
+    jmp winner_match
+    
+    idol_l:
+    mov a,12
+    mov b,5
+    pos_cursor a,b
+    lea dx, [idol_looser] 
+    mov ah, 09h       
+    int 21h
+
+    winner_match:
+    delay 20
+    call press_key_follow
     mov ah,4ch
     int 21h     
 main endp 
