@@ -22,7 +22,7 @@ include cursor.asm
     looser db "Ni para patear un penal :C$"
     idol_winner db "El TIA te lo agradecera por siempre$"
     idol_looser db "El TIA sufrio las consecucnecias$"
-    coq_winner db "Has conseguido vengar el cincocer$"
+    coq_winner db "Has conseguido vengar el cincocero$"
     coq_looser db "Ya nada, hay que saquear el TUTI$"
     
     idolosh_team db "Burrai,Vargas,Rodriguez,Sosa,Chala,Souza,Trindade,Corozo,Solano,Kitu,Polaco,$"
@@ -34,7 +34,7 @@ include cursor.asm
     fail_msg db "NOOOOOO$"
     bsc_name db "IDO$"
     cse_name db "COQ$"
-    kickers dw 5 dup(0)
+    kickers db 5 dup(0)
     buffer db 2 dup("$")
     init_green db 0ah
     num_pentaltys db 5
@@ -215,6 +215,7 @@ main proc
     sub i,10
     add j,10
     player i,j,team,0
+    call name_kicker
 
     movement:
     delay 3
@@ -526,9 +527,8 @@ team_players proc far
     int 21h 
     mov d,0h
     mov x,0h
-    cmp team,1h
+    cmp team,1
     jnz coq
-    idol:
     mov j,0eh
     lea di,idolosh_team
     jmp choose_players
@@ -564,10 +564,17 @@ team_players proc far
     jz select_end
     jmp select
     store_player:
+
+
     mov ax,di
     mov di,x
-    mov kickers[di],ax
+    push bx
+    mov bl,d
+    mov kickers[di],bl
     mov di,ax
+    pop bx
+
+
     call input_sound
     inc x
     cmp x,5h
@@ -753,6 +760,71 @@ input_sound proc far
 	pop ax
 	ret
 input_sound endp
+;---------------------------------------------------------------------------------------------------------------------
+
+;name kicker----------------------------------------------------------------------------------------------------------
+name_kicker proc far
+    push cx
+    push ax
+    push di
+    push bx
+    mov a,1
+    mov b,18
+
+    mov bx,5
+    sub bl,num_pentaltys
+    mov di,bx
+    
+    pos_cursor a,b
+    mov al, [kickers + di]
+    mov bl,al
+    
+    cmp team,1
+    jz idolosh_kickers
+    lea di,[coquetash_team]
+    mov ch,09h
+    mov e,ch
+    jmp find_kicker
+    idolosh_kickers:
+    mov ch,0eh
+    mov e,ch
+    lea di,[idolosh_team]
+    
+    find_kicker:
+    mov al,[di]
+    cmp bl,0
+    jz write_kicker
+    cmp al,44
+    jnz next_letter_kickers
+    dec bl
+    next_letter_kickers:
+    inc di
+    jmp find_kicker
+    
+    write_kicker:
+    mov ch,[di]
+    cmp ch,44
+    jz end_write_kicker
+    pos_cursor a,b
+    mov ah,0ah
+    mov al,[di]
+    mov bx,0
+    mov bl,e
+    mov cx,1
+    int 10h
+    inc di
+    inc b
+    jmp write_kicker
+    
+    
+    end_write_kicker:
+
+    pop bx
+    pop di
+    pop ax
+    pop cx
+    ret
+name_kicker endp
 ;---------------------------------------------------------------------------------------------------------------------
 
 
