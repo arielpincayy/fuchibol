@@ -66,10 +66,12 @@ main proc
     
     call erase
     
+    ;graphical mode setting
     mov ax,013h 
     int 10h
     delay 10
-    
+
+    ;write letter by letter the title
     mov a,11
     mov b,8
     mov d,0h
@@ -93,16 +95,9 @@ main proc
     inc d
     cmp d,23
     jnz writting
-    delay 2
+    delay 10
     call erase
     
-    
-    mov a,2
-    mov b,9
-    pos_cursor a,b
-    lea dx, wel 
-    mov ah, 09h       
-    int 21h 
     
     mov a,7
     mov b,8
@@ -118,6 +113,7 @@ main proc
     mov ah, 09h       
     int 21h 
     
+    ;choose team
     choose:
     mov a,11
     mov b,100
@@ -139,7 +135,7 @@ main proc
     delay 5
     call erase
     
-    
+    ;show the mission
     cmp team,1h
     jz tia
     cincocero:
@@ -162,6 +158,7 @@ main proc
     call team_players
     delay 10
     
+    ;game instructions
     call erase
     mov a,5
     mov b,15
@@ -181,6 +178,7 @@ main proc
     int 21h
     delay 40
 
+    ;press key to continue
     call erase
     mov a,11
     mov b,9
@@ -192,9 +190,11 @@ main proc
     call press_key_follow
 ;---------------------------------------------------------------------------------------------------------------------
     
+    ;penalties
     
     penalties_match:   
 ;your turn----------------------------------------------------------------------------------------------------------  
+    ;draw the scenario
     call erase
     mov ax, 0600h   
     mov bh, 02h  
@@ -204,7 +204,8 @@ main proc
     mov dl, 39
     int 10H  
     call arco
-
+    
+    ;draw goalkeeper, kicker, board, name kicker
     call score_board
     mov i,165
     push i
@@ -217,6 +218,7 @@ main proc
     player i,j,team,0
     call name_kicker
 
+    ;goalkeeper movement
     movement:
     delay 3
     mov ah,01h
@@ -255,6 +257,7 @@ main proc
     player i,j,computer_team,1
     jmp movement
     
+    ;kick checker
     shooted:
     mov pos_ball,al
     mov ax, 0600h   
@@ -305,6 +308,7 @@ main proc
 ;-----------------------------------------------------------------------------------------------------------------    
     
 ;computer turn----------------------------------------------------------------------------------------------------   
+    ;draw the scenario
     call press_key_follow
     call erase
     mov ax, 0600h   
@@ -316,6 +320,7 @@ main proc
     int 10H  
     call arco
 
+    ;draw goalkeeper, kicker, board, name kicker
     call score_board
     mov i,165
     push i
@@ -327,7 +332,7 @@ main proc
     add j,10
     player i,j,computer_team,0
 
-
+    ;ball direction
     movement2:
     delay 3
     mov ah,01h
@@ -354,6 +359,7 @@ main proc
     mov [pos_ball],135
     jmp movement2
     
+    ;kick checker
     shooted2:
     mov pos,al
     mov ax, 0600h   
@@ -413,12 +419,13 @@ main proc
 ;-----------------------------------------------------------------------------------------------------------------
     
     call press_key_follow
-    dec [num_pentaltys]
-    cmp [num_pentaltys],0
+    dec [num_pentaltys]   ; verifica si se acabo la tanda de penales
+    cmp [num_pentaltys],0  
     jnz penalties_match
 
-    mov [num_pentaltys],1
-    xor ax,ax
+    ;tie-breaker
+    mov [num_pentaltys],1 ; verifica si la tanda termino en un empate
+    xor ax,ax             ; en dicho caso, se agrega un penal mas para cada equipo hasta que desempaten
     mov al,[my_score]
     cmp al,[computer_score]
     jz penalties_match
@@ -604,7 +611,7 @@ team_players proc far
 team_players endp
 ;--------------------------------------------------------------------------------------------------------------
 
-;ARCO----------------------------------------------------------------------------------------------------------
+;Draw goal----------------------------------------------------------------------------------------------------------
 arco proc far    
     mov i,110
     mov j,47  
@@ -736,26 +743,23 @@ score_board endp
 input_sound proc far
     push ax
     push bx
-	mov al, 3h       
-	mov bx, 4000h   
-	mov cx, 1h 
+	mov al, 3h    ; Carga el valor 3h en el registro AL, configurando el modo del temporizador.   
+	mov bx, 4000h ; Carga el valor 4000h en el registro BX, que representa el divisor para el temporizador. 
 	
-    input_loop_sound:
-	out 43h, al     
+	out 43h, al   ; Envia el valor de AL al puerto 43h (control del temporizador 8253)
 	mov ax, bx
-	out 42h, al     
+	out 42h, al   ; Envia el valor de AL al puerto 42h (canal 2 del temporizador 8253)  
 	mov al, ah
-	out 42h, al     
-	mov ax, 40h
+	out 42h, al   ; Envia el valor de AL al puerto 61h (control del altavoz del sistema)  
 	mov al, 3       
-	out 61h, al
-	mov ax, 86DDh   
-	int 15h
+	out 61h, al   ; Envia el valor de AL al puerto 61h (control del altavoz del sistema)
+	mov cx, 1h
+	mov ax, 86DDh    
+	int 15h       ; Llamar a la interrupción 15h para esperar un tiempo
 	mov ax, 40h
 	mov al, 0       
-	out 61h, al
-    dec cx
-	jnz input_loop_sound   
+	out 61h, al   ; Envia el valor de AL al puerto 61h (apaga el altavoz del sistema)
+
 	pop bx          
 	pop ax
 	ret
