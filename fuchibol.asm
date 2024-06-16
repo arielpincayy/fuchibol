@@ -26,7 +26,7 @@ include cursor.asm
     coq_looser db "Ya nada, hay que saquear el TUTI$"
     
     idolosh_team db "Burrai,Vargas,Rodriguez,Sosa,Chala,Souza,Trindade,Corozo,Solano,Kitu,Polaco,$"
-    coquetash_team db "Ortiz,Caicedo,Leguizamon,Leon,Cortez,Cortez,Erbes,Garces,Meli,Carabali,Ruiz,Castelli,$"
+    coquetash_team db "Ortiz,Caicedo,Leguizamon,Leon,Cortez,Erbes,Garces,Meli,Carabali,Ruiz,Castelli,$"
     inst_center db "S: Centro$"
     inst_right db "D: Derecha$"
     inst_left db "A: Izquierda$"
@@ -35,7 +35,7 @@ include cursor.asm
     bsc_name db "IDO$"
     cse_name db "COQ$"
     kickers db 5 dup(0)
-    buffer db 2 dup("$")
+    score db 2 dup("$")
     init_green db 0ah
     num_pentaltys db 5
     my_score db 0
@@ -220,7 +220,7 @@ main proc
 
     ;goalkeeper movement
     movement:
-    delay 3
+    delay 1
     mov ah,01h
     int 16h
     call delete_goalKeeper
@@ -228,7 +228,7 @@ main proc
     mov j,66
     mov pos,165
     player i,j,computer_team,1
-    delay 3
+    delay 1
     mov ah,01h
     int 16h
     jnz shooted
@@ -237,7 +237,7 @@ main proc
     mov j,66
     mov pos,195
     player i,j,computer_team,1
-    delay 3
+    delay 1
     mov ah,01h
     int 16h
     jnz shooted
@@ -246,7 +246,7 @@ main proc
     mov j,66
     mov pos,165
     player i,j,computer_team,1
-    delay 3
+    delay 1
     mov ah,01h
     int 16h
     jnz shooted
@@ -334,24 +334,24 @@ main proc
 
     ;ball direction
     movement2:
-    delay 3
+    delay 1
     mov ah,01h
     int 16h
     mov i,165
     mov [pos_ball],165
-    delay 3
+    delay 1
     mov ah,01h
     int 16h
     jnz shooted2
     mov i,195
     mov [pos_ball],195
-    delay 3
+    delay 1
     mov ah,01h
     int 16h
     jnz shooted2
     mov i,165
     mov [pos_ball],165
-    delay 3
+    delay 1
     mov ah,01h
     int 16h
     jnz shooted2
@@ -438,6 +438,7 @@ main proc
     cmp bl,[computer_score]
     jl loose_match
     
+    ;winner message
     mov a,8
     mov b,12
     pos_cursor a,b
@@ -448,14 +449,21 @@ main proc
     cmp bl,1
     jz idol_w
     
+    ;Ganaste siendo coquetash
     mov a,12
     mov b,2
     pos_cursor a,b
     lea dx, [coq_winner] 
     mov ah, 09h       
     int 21h
+    delay 20
+    call erase
+    mov dl,[team]
+    call winner_celebration
+    delay 20
     jmp winner_match
 
+    ;Ganaste siendo idolosh
     idol_w:
     mov a,12
     mov b,2
@@ -463,8 +471,14 @@ main proc
     lea dx, [idol_winner] 
     mov ah, 09h       
     int 21h
+    delay 20
+    call erase
+    mov dl,[team]
+    call winner_celebration
+    delay 20
     jmp winner_match 
 
+    ;looser message
     loose_match:
     mov a,8
     mov b,5
@@ -476,6 +490,7 @@ main proc
     cmp bl,1
     jz idol_l
     
+    ;Perdiste siendo coquetash
     mov a,12
     mov b,5
     pos_cursor a,b
@@ -484,6 +499,7 @@ main proc
     int 21h
     jmp winner_match
     
+    ;Perdiste siendo idolosh
     idol_l:
     mov a,12
     mov b,5
@@ -494,12 +510,12 @@ main proc
 
     winner_match:
     delay 20
-    call press_key_follow
+    call press_key_follow ;Fin de la tanda
     mov ah,4ch
     int 21h     
 main endp 
 
-;erase--------------------------------------------------------------------------------------------------------
+;erase screen--------------------------------------------------------------------------------------------------------
 erase proc far
     mov ah,0fh
     int 10h
@@ -521,6 +537,8 @@ press_key_follow endp
 ;team_players--------------------------------------------------------------------------------------------------
 team_players proc far
     init_team_choose:
+
+    ;Instrucciones para elegir los pateadores
     mov a,2h
     mov b,10
     pos_cursor a,b
@@ -543,7 +561,7 @@ team_players proc far
     mov j,09h
     lea di,coquetash_team
     
-
+    ;Eleccion de pateadores
     choose_players: 
     mov a,11
     mov b,16
@@ -570,9 +588,9 @@ team_players proc far
     cmp al,100
     jz select_end
     jmp select
+
+    ;Guarda los jugadores que van a patear
     store_player:
-
-
     mov ax,di
     mov di,x
     push bx
@@ -666,8 +684,8 @@ is_goal proc far
     mov al, pos_ball
     cmp al,pos
     jnz goal
-    mov a,2
-    mov b,15
+    mov a,3
+    mov b,16
     pos_cursor a,b
     lea dx, fail_msg  
     mov ah, 09h    
@@ -676,8 +694,8 @@ is_goal proc far
     delay 20
     ret
     goal:
-    mov a,2
-    mov b,177
+    mov a,3
+    mov b,18
     pos_cursor a,b
     lea dx, goal_msg    
     mov ah, 09h    
@@ -716,9 +734,9 @@ score_board proc far
     add b,4
     pos_cursor a,b
     mov al,[my_score]
-    add al,'0'
-    mov [buffer],al 
-    mov dx, offset buffer
+    add al,'0'           ;Convierte el digito en su codigo ASCIII
+    mov [score],al     
+    lea dx, score 
     int 21h
     
     add b,2
@@ -729,9 +747,9 @@ score_board proc far
     add b,4
     pos_cursor a,b
     mov al,[computer_score]
-    add al,'0'
-    mov [buffer],al 
-    mov dx, offset buffer
+    add al,'0'           ;Convierte el digito en su codigo ASCIII
+    mov [score],al     
+    lea dx, score 
     int 21h
 
 
@@ -831,5 +849,103 @@ name_kicker proc far
 name_kicker endp
 ;---------------------------------------------------------------------------------------------------------------------
 
+;Publicity------------------------------------------------------------------------------------------------------------
+winner_celebration proc far
+    push ax
+    push bx
+    push cx
+    push dx
+    
+    ;Pinta la pantalla de light red
+    mov ax, 0600h  
+    mov bh, 0ch    
+    mov cx, 0000h  
+    mov dx, 0c7ffh 
+    int 10h
+    
+    ;Dibuja el trofeo
+    mov bl,11
+    mov i,110
+    mov j,110
+    
+    pop dx
+    draw_winner:
+    push [j]
+    push [i]
+    player i,j,dl,1
+    pop cx
+    add cx,10
+    mov i,cx
+    pop cx
+    mov j,cx
+    dec bl
+    jnz draw_winner
+    
+    mov i,145
+    mov j,90
+    mov bl,3
+
+    base_cup1:
+    push [i]
+    push [j]
+    line_hor 20,i,j,06h
+    pop cx
+    dec cx
+    mov j,cx
+    pop cx
+    mov i,cx
+    dec bl
+    jnz base_cup1
+
+    add i,5
+    mov bl,3
+    base_cup2:
+    push [i]
+    push [j]
+    line_hor 10,i,j,0eh
+    pop cx
+    dec cx
+    mov j,cx
+    pop cx
+    mov i,cx
+    dec bl
+    jnz base_cup2
+    
+    add i,2
+    mov bl,10
+    body_cup:
+    push [i]
+    push [j]
+    line_hor 6,i,j,0eh
+    pop cx
+    dec cx
+    mov j,cx
+    pop cx
+    mov i,cx
+    dec bl
+    jnz body_cup
+
+    push [i]
+    push [j]
+    
+    sub j,9
+    add i,8
+    circle i,j,10,0eh
+
+    pop cx
+    mov j,cx
+    pop cx
+    mov i,cx
+
+    sub j,3
+    add i,3
+    circle i,j,3,0fh
+
+    pop cx
+    pop bx
+    pop ax
+    ret
+winner_celebration endp
+;---------------------------------------------------------------------------------------------------------------------
 
 end main
