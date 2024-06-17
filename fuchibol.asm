@@ -24,6 +24,7 @@ include cursor.asm
     idol_looser db "El TIA sufrio las consecucnecias$"
     coq_winner db "Has conseguido vengar el cincocero$"
     coq_looser db "Ya nada, hay que saquear el TUTI$"
+    publicity_msg db "Ariel Pincay gaming .inc$"
     
     idolosh_team db "Burrai,Vargas,Rodriguez,Sosa,Chala,Souza,Trindade,Corozo,Solano,Kitu,Polaco,$"
     coquetash_team db "Ortiz,Caicedo,Leguizamon,Leon,Cortez,Erbes,Garces,Meli,Carabali,Ruiz,Castelli,$"
@@ -42,6 +43,7 @@ include cursor.asm
     computer_score db 0
     pos db 165
     pos_ball db 165
+    pos_publicity db 0
     
 
 
@@ -202,7 +204,8 @@ main proc
     mov cl, 0
     mov dh, 24  
     mov dl, 39
-    int 10H  
+    int 10h  
+    call publicity
     call arco
     
     ;draw goalkeeper, kicker, board, name kicker
@@ -317,15 +320,14 @@ main proc
     mov cl, 0
     mov dh, 24  
     mov dl, 39
-    int 10H  
+    int 10h  
+    call publicity
     call arco
 
     ;draw goalkeeper, kicker, board, name kicker
     call score_board
     mov i,165
     push i
-    mov j,66
-    player i,j,team,1
     mov j,170
     circle i,j,6,0fh
     sub i,10
@@ -338,25 +340,65 @@ main proc
     mov ah,01h
     int 16h
     mov i,165
-    mov [pos_ball],165
+    mov [pos_ball],165       ;actualizar posicion del balon     
+    call delete_goalkeeper
+    push [i]
+    push [j]
+    mov i,165
+    mov j,65
+    player i,j,team,1
+    pop cx
+    mov j,cx
+    pop cx
+    mov i,cx
     delay 1
     mov ah,01h
     int 16h
     jnz shooted2
     mov i,195
-    mov [pos_ball],195
+    mov [pos_ball],195       ;actualizar posicion del balon
+    call delete_goalkeeper
+    push [i]
+    push [j]
+    mov i,165
+    mov j,65
+    player i,j,team,1
+    pop cx
+    mov j,cx
+    pop cx
+    mov i,cx
     delay 1
     mov ah,01h
     int 16h
     jnz shooted2
     mov i,165
-    mov [pos_ball],165
+    mov [pos_ball],165       ;actualizar posicion del balon
+    call delete_goalkeeper
+    push [i]
+    push [j]
+    mov i,165
+    mov j,65
+    player i,j,team,1
+    pop cx
+    mov j,cx
+    pop cx
+    mov i,cx
     delay 1
     mov ah,01h
     int 16h
     jnz shooted2
     mov i,135
-    mov [pos_ball],135
+    mov [pos_ball],135       ;actualizar posicion del balon
+    call delete_goalkeeper
+    push [i]
+    push [j]
+    mov i,165
+    mov j,65
+    player i,j,team,1
+    pop cx
+    mov j,cx
+    pop cx
+    mov i,cx
     jmp movement2
     
     ;kick checker
@@ -668,6 +710,7 @@ delete_goalKeeper proc far
     inc dh 
     mov dl, 39; DH=fila, DL=columna
     int 10h 
+    call publicity
     call arco
     ret
 delete_goalKeeper endp
@@ -883,7 +926,7 @@ winner_celebration proc far
     
     mov i,145
     mov j,90
-    mov bl,3
+    mov bl,4
 
     base_cup1:
     push [i]
@@ -947,5 +990,46 @@ winner_celebration proc far
     ret
 winner_celebration endp
 ;---------------------------------------------------------------------------------------------------------------------
+
+;publicity------------------------------------------------------------------------------------------------------------
+publicity proc far
+    push ax
+    push bx
+    push cx
+    push dx
+     
+    ;Pinta la banda de publicidad
+    xor cx,cx
+    mov ch,[init_green]
+    sub ch,2
+
+    mov ax, 0600h  
+    mov bh, 07h    
+    mov dh, [init_green]
+    dec dh
+    mov dl, 0c7h 
+    int 10h
+  
+    ;Escribe en la banda
+    mov a,8
+    pos_cursor a,pos_publicity
+    lea dx,[publicity_msg]
+    mov ah, 09h       
+    int 21h
+    inc [pos_publicity]         ;actualizar posicion del texto de la publicidad
+    
+    cmp [pos_publicity],30
+    jnz end_write_publicity
+    mov [pos_publicity],0
+
+    end_write_publicity:
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+publicity endp
+;---------------------------------------------------------------------------------------------------------------------
+
 
 end main
