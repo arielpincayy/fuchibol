@@ -1,3 +1,4 @@
+;i=fila,j=columna
 graph_pixel macro i,j,color 
     push ax
     push cx
@@ -13,6 +14,7 @@ graph_pixel macro i,j,color
     pop ax 
 endm 
 
+;i=fila,j=columna,h=lados
 square macro i,j,h,color
     local height,width  
     mov a,0 

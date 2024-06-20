@@ -656,8 +656,8 @@ team_players proc far
     cmp d,0bh
     jnz choose_players
     cmp x,5h
-    jz end_team_players
-    mov a,11
+    jz end_team_players      ;verifica si se ha escogido el numero suficiente de jugadores, caso contrario
+    mov a,11                 ;vuelve a elegir
     mov b,3
     pos_cursor a,b
     lea dx, missing_kickers
@@ -804,14 +804,14 @@ score_board endp
 input_sound proc far
     push ax
     push bx
-	mov al, 3h    ; Carga el valor 3h en el registro AL, configurando el modo del temporizador.   
-	mov bx, 4000h ; Carga el valor 4000h en el registro BX, que representa el divisor para el temporizador. 
+	mov al, 3h    ; Carga el valor 3h en el registro AL, configurando el modo del temporizador (Generador de onda cuadrada).   
+	mov bx, 3000h ; Carga el valor 3000h en el registro BX, que representa el divisor para el temporizador. 
 	
 	out 43h, al   ; Envia el valor de AL al puerto 43h (control del temporizador 8253)
 	mov ax, bx
 	out 42h, al   ; Envia el valor de AL al puerto 42h (canal 2 del temporizador 8253)  
 	mov al, ah
-	out 42h, al   ; Envia el valor de AL al puerto 61h (control del altavoz del sistema)  
+	out 42h, al   ; Envia el valor de AL al puerto 42h (canal 2 del temporizador 8253)  
 	mov al, 3       
 	out 61h, al   ; Envia el valor de AL al puerto 61h (control del altavoz del sistema)
 	mov cx, 1h
@@ -980,6 +980,7 @@ winner_celebration proc far
     pop cx
     mov i,cx
 
+    ;Brillo de la copa
     sub j,3
     add i,3
     circle i,j,3,0fh
@@ -989,9 +990,9 @@ winner_celebration proc far
     pop ax
     ret
 winner_celebration endp
-;---------------------------------------------------------------------------------------------------------------------
+;--------------------------------------------------------------------------------------------------------------------
 
-;publicity------------------------------------------------------------------------------------------------------------
+;publicity-----------------------------------------------------------------------------------------------------------
 publicity proc far
     push ax
     push bx
@@ -1029,7 +1030,7 @@ publicity proc far
     pop ax
     ret
 publicity endp
-;---------------------------------------------------------------------------------------------------------------------
+;--------------------------------------------------------------------------------------------------------------------
 
 
 end main

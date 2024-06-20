@@ -1,5 +1,6 @@
 include square.asm
 
+;i=fila,j=columna,l=largo
 line_hor macro l,i,j,color
 
     local lar

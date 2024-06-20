@@ -1,7 +1,7 @@
 include square.asm
 include line.asm
 
-
+;i=fila,j=columna
 circle macro i,j,radio,color
     local w
     push bx

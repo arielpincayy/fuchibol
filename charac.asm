@@ -2,7 +2,8 @@ include square.asm
 include line.asm
 include circle.asm
 
-player macro i,j,t,front
+;i=fila,j=columna,t=team
+player macro i,j,t,front 
     local no_eye,draw
     push bx
     cmp t,1
